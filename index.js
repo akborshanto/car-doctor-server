@@ -1,13 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 var jwt = require("jsonwebtoken");
+
 //mongodb
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 5000;
 //middleware
-app.use(cors());
-app.use(express.json()); //req deye je data ta patabo ta json ei coverr kore pelbe
+app.use(cors({
+//cookie//cookie parser client --> backend
+
+
+
+//origin//kon jaigai theke set korbo
+origin:['http://localhost:5173'],
+credentials:true
+
+}));
+app.use(express.json()); //req deye je data ta patabo ta json ei coverr kore 
+app.use(cookieParser())
+//cookie parse
 //envfil
 require("dotenv").config();
 
@@ -45,14 +58,14 @@ async function run() {
 
       //res.send(token);
       ///send the cookie to the server side 
-      res.cookie('token',token,{
-        //option
+res.cookie('token',token,{
 
-        httpOnly:true, //localhost 5173/Cookie is accessible only through HTTP(S)
-        secure:false,
-        sameSite:'none'
-      })
-      .send({sucess:true})
+maxAge:360000,//cookie expire agter 1 hour
+httpOnly:true,//cookie is accesingleo oly https,
+secure:false
+
+})
+.send({success:true})
 
     });
 
@@ -70,20 +83,23 @@ async function run() {
     app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id);
-      const query = { _id: new ObjectId(id) };
+      const query = { _id: id };
 
       const options = {
         // Include only the `title` and `imdb` fields in the returned document
         projection: { title: 1, price: 1, service_id: 1, img: 1 },
       };
 
-      const result = await serviceCollection.findOne(query);
+      const result = await serviceCollection.findOne(query,options);
       res.send(result);
     });
 
     //get booking add data from checkout form
     app.get("/booking", async (req, res) => {
+
       console.log(req.query.email);
+      
+      console.log('tok tok token',req.cookies.token)
       //quey
       let query = {};
 
