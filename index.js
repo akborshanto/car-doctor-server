@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+var jwt = require("jsonwebtoken");
 //mongodb
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
@@ -27,7 +28,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-   // await client.connect();
+    // await client.connect();
 
     /* ========================================================================================================================= */
 
@@ -35,6 +36,27 @@ async function run() {
     const serviceCollection = client.db("car-doctor").collection("services");
     //create anew booking collection andconnec to the server
     const bookingCollection = client.db("car-doctor").collection("booking");
+
+    //========AUTH REALTDED API==========
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token=jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'})
+      console.log(token);
+
+      //res.send(token);
+      ///send the cookie to the server side 
+      res.cookie('token',token,{
+        //option
+
+        httpOnly:true, //localhost 5173/Cookie is accessible only through HTTP(S)
+        secure:false,
+        sameSite:'none'
+      })
+      .send({sucess:true})
+
+    });
+
+    //=========SERVICE REALTDED API==========
     //get the services collection data
     app.get("/services", async (req, res) => {
       const cursor = serviceCollection.find();
@@ -43,24 +65,21 @@ async function run() {
       res.send(result);
     });
 
-   // will i  get the ingle services data form thte server
-   // problem with mongodbsingle value of id
-    app.get('/services/:id', async (req, res) => {
+    // will i  get the ingle services data form thte server
+    // problem with mongodbsingle value of id
+    app.get("/services/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id)
-      const query = { _id: new ObjectId(id) }
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
 
       const options = {
-          // Include only the `title` and `imdb` fields in the returned document
-          projection: { title: 1, price: 1, service_id: 1, img: 1 },
+        // Include only the `title` and `imdb` fields in the returned document
+        projection: { title: 1, price: 1, service_id: 1, img: 1 },
       };
 
       const result = await serviceCollection.findOne(query);
       res.send(result);
-    })
-
-
-
+    });
 
     //get booking add data from checkout form
     app.get("/booking", async (req, res) => {
@@ -77,9 +96,6 @@ async function run() {
       res.send(result);
     });
 
-
-
-
     //booking collection wit post
     app.post("/booking", async (req, res) => {
       const quary = req.body;
@@ -87,18 +103,32 @@ async function run() {
       res.send(result);
       console.log(quary);
     });
-//singleBOoing delete from  bokking collection
-app.delete('/booking/:id',async(req,res)=>{
+    //singleBOoing delete from  bokking collection
+    app.delete("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await bookingCollection.deleteOne(filter);
+      res.send(result);
+    });
+    //put the booking collection
+    app.patch("/booking/:id", async (req, res) => {
+      //paramsid
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
 
+      const option = { upset: true };
 
-const id=req.params.id;
-const filter={_id: new ObjectId(id)}
-const result=await bookingCollection.deleteOne(filter)
-res.send(result)
-
-})
-
-
+      const updateBooking = req.body;
+      //updaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      const updateDoc = {
+        $set: {
+          status: updateBooking.status,
+        },
+      };
+      const result = await bookingCollection.updateOne(filter, updateDoc);
+      res.send(result);
+      // console.log(updateBooking);
+    });
 
     /* ============================================================================================================================= */
     // Send a ping to confirm a successful connection
