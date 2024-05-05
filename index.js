@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+   // await client.connect();
 
     /* ========================================================================================================================= */
 
@@ -43,20 +43,24 @@ async function run() {
       res.send(result);
     });
 
-    //will i  get the ingle services data form thte server
-    //problem with mongodbsingle value of id
-    // app.get('/services/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) }
+   // will i  get the ingle services data form thte server
+   // problem with mongodbsingle value of id
+    app.get('/services/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
 
-    //   const options = {
-    //       // Include only the `title` and `imdb` fields in the returned document
-    //       projection: { title: 1, price: 1, service_id: 1, img: 1 },
-    //   };
+      const options = {
+          // Include only the `title` and `imdb` fields in the returned document
+          projection: { title: 1, price: 1, service_id: 1, img: 1 },
+      };
 
-    //   const result = await serviceCollection.findOne(query, options);
-    //   res.send(result);
-    // })
+      const result = await serviceCollection.findOne(query);
+      res.send(result);
+    })
+
+
+
 
     //get booking add data from checkout form
     app.get("/booking", async (req, res) => {
@@ -98,7 +102,7 @@ res.send(result)
 
     /* ============================================================================================================================= */
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    //await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
